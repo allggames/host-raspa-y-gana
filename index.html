@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090909">
+  <meta name="description" content="Raspá y descubrí la sorpresa de HOST. El sabor que prende todo.">
+  <title>HOST | Raspá y Ganá 🔥</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./config.js"></script>
+  <script defer src="./game.js"></script>
+</head>
+<body>
+  <div class="ambient glow-left" aria-hidden="true"></div>
+  <div class="ambient glow-right" aria-hidden="true"></div>
+  <div class="particles" aria-hidden="true"></div>
+  <div class="topline">🔥 EL SABOR QUE PRENDE TODO &nbsp;·&nbsp; HOST POSADAS &nbsp;·&nbsp; EL SABOR QUE PRENDE TODO 🔥</div>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="brand" aria-label="HOST">
+        <img src="./assets/logo-host.png" alt="Logo HOST" id="hostLogo" hidden>
+        <span class="brand-fallback" id="brandFallback" aria-hidden="true">HOST<span class="brand-underline"></span></span>
+      </div>
+      <div class="header-tag"><span class="dot"></span> EXPERIENCIA HOST <span class="fire-icon">✦</span></div>
+    </header>
+
+    <main class="main-layout">
+      <section class="intro" aria-labelledby="mainTitle">
+        <div class="eyebrow"><span class="eyebrow-line"></span> PREPARAMOS ALGO PARA VOS <span>✦</span></div>
+        <h1 id="mainTitle">RASPÁ <span class="and">Y</span><br><span class="h1-highlight">GANÁ<span class="h1-star">✷</span></span></h1>
+        <div class="intro-stroke" aria-hidden="true"></div>
+        <h2>¡TU PRÓXIMA SORPRESA<br>ESTÁ A UN RASPÓN!</h2>
+        <p class="description">¿Tenés suerte hoy? Descubrí qué se esconde detrás de la tarjeta. <strong>Deslizá el dedo o el mouse</strong> y dejá que el fuego haga lo suyo.</p>
+        <div class="how-it-works" aria-label="Cómo jugar">
+          <div class="how-step"><span class="step-index">01</span><div><strong>RASPÁ</strong><small>Frotá la tarjeta</small></div></div>
+          <span class="step-arrow" aria-hidden="true">→</span>
+          <div class="how-step"><span class="step-index">02</span><div><strong>DESCUBRÍ</strong><small>Revelá tu sorpresa</small></div></div>
+          <span class="step-arrow" aria-hidden="true">→</span>
+          <div class="how-step"><span class="step-index">03</span><div><strong>CELEBRÁ</strong><small>¡Y disfrutá!</small></div></div>
+        </div>
+      </section>
+
+      <section class="ticket-column" aria-label="Juego Raspa y Ganá">
+        <div class="ticket-topline"><span>🎟️ &nbsp; TU TARJETA HOST</span><span class="topline-number">Nº <span id="ticketNumber">000001</span></span></div>
+        <div class="ticket-frame">
+          <div class="ticket-head"><span class="ticket-label">HOST / EDICIÓN ESPECIAL</span><span class="ticket-luck">✳ &nbsp; ¡MUCHA SUERTE!</span></div>
+          <div class="ticket-title">LA SUERTE<br><span>ESTÁ SERVIDA.</span></div>
+          <div class="ticket-subtitle">RASPA PARA DESCUBRIR TU SORPRESA</div>
+          <div class="scratch-outer">
+            <div class="scratch-board" id="scratchBoard">
+              <div class="hidden-prize" id="prizeDisplay" aria-live="polite">
+                <div class="prize-burst" aria-hidden="true"></div>
+                <div class="prize-icon" id="prizeIcon">🎁</div>
+                <div class="prize-pretitle" id="prizePretitle">¡TE TOCÓ!</div>
+                <div class="prize-name" id="prizeName">UNA SORPRESA</div>
+                <div class="prize-detail" id="prizeDetail">¡Qué buena suerte!</div>
+              </div>
+              <canvas id="scratchCanvas" role="img" aria-label="Zona para raspar y descubrir el premio. También podés usar el botón Revelar resultado."></canvas>
+            </div>
+          </div>
+          <div class="scratch-hint"><span class="hint-dot"></span><span id="statusText" role="status" aria-live="polite">DESLIZÁ PARA RASPAR</span><span class="hint-dot"></span></div>
+          <div class="ticket-bottom"><span>🍗</span><span>HECHO CON FUEGO.<br>HECHO PARA VOS.</span><span>🔥</span></div>
+        </div>
+        <div class="ticket-actions">
+          <button type="button" class="button-reveal" id="revealButton">REVELAR RESULTADO <span>↗</span></button>
+          <button type="button" class="button-reset" id="resetButton">↻ &nbsp; VOLVER A PROBAR</button>
+        </div>
+        <div class="demo-notice" role="note"><span class="demo-indicator">●</span> <strong>VERSIÓN DE PRUEBA</strong> · Los premios mostrados son ejemplos y no se pueden canjear.</div>
+      </section>
+    </main>
+
+    <div class="bottom-banner" aria-hidden="true"><div class="ticker-track"><span>🍗 POLLO FRITO</span><span>✦</span><span>🔥 EL SABOR QUE PRENDE TODO</span><span>✦</span><span>🎁 PREMIOS HOST</span><span>✦</span><span>🍗 POLLO FRITO</span><span>✦</span><span>🔥 EL SABOR QUE PRENDE TODO</span><span>✦</span><span>🎁 PREMIOS HOST</span><span>✦</span></div></div>
+    <footer class="footer"><span>© HOST · POSADAS, MISIONES</span><span>EL SABOR QUE PRENDE TODO 🔥</span></footer>
+  </div>
+  <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+</body>
+</html>
