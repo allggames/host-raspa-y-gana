@@ -7,8 +7,8 @@
 <title>HOST | Admin Raspa y Ganá</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./admin.css?v=1">
-<script type="module" src="./admin.js?v=1"></script>
+<link rel="stylesheet" href="./admin.css?v=2">
+<script type="module" src="./admin.js?v=2"></script>
 </head>
 <body>
 <header class="header"><div><span class="brand">HOST<span>🔥</span></span><small>ADMINISTRACIÓN · RASPÁ Y GANÁ</small></div><a href="../">Volver al juego</a></header>
@@ -48,6 +48,20 @@
         <div class="detail"><span>Entregado</span><strong id="result-redeemed"></strong></div>
         <button id="redeem" class="primary redeem" type="button" hidden>MARCAR COMO ENTREGADO</button>
         <p class="muted notice">Verificá el premio físicamente antes de confirmar. La acción no se puede repetir.</p>
+      </div>
+    </section>
+    <section class="panel" id="pending-section">
+      <div class="pending-header">
+        <div><p class="eyebrow">ENTREGAS</p><h2>PREMIOS PENDIENTES DE ENTREGA</h2></div>
+        <button class="secondary" type="button" id="pending-refresh">Actualizar lista</button>
+      </div>
+      <p class="muted">Premios que ya fueron ganados y todavía no fueron entregados. Confirmá la entrega recién cuando el cliente retire su premio.</p>
+      <p id="pending-status" class="feedback" role="status"></p>
+      <div id="pending-list" class="pending-list"></div>
+      <div class="pending-pagination">
+        <button type="button" id="pending-prev" class="secondary" hidden>Anterior</button>
+        <span id="pending-page" class="muted"></span>
+        <button type="button" id="pending-next" class="secondary" hidden>Ver más</button>
       </div>
     </section>
     <button type="button" class="secondary refresh" id="refresh">Actualizar contadores</button>
