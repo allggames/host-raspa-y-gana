@@ -51,10 +51,58 @@ prize=choose();done=false;drag=false;prev=null;strokes=0;fill();canvas.classList
 status.textContent="DESLIZÁ PARA RASPAR";reveal.disabled=false;reveal.innerHTML="REVELAR RESULTADO <span>↗</span>";
 $("confettiLayer").replaceChildren();const n=new Uint32Array(1);crypto.getRandomValues(n);$("ticketNumber").textContent=String(n[0]%1000000).padStart(6,"0");setup();
 }
-canvas.addEventListener("pointerdown",e=>{if(done)return;e.preventDefault();drag=true;prev=null;canvas.setPointerCapture(e.pointerId);scratch(loc(e));});
-canvas.addEventListener("pointermove",e=>{if(!drag||done)return;e.preventDefault();scratch(loc(e));});
-function end(e){if(!drag)return;drag=false;prev=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);check();}
-canvas.addEventListener("pointerup",end);canvas.addEventListener("pointercancel",end);canvas.addEventListener("lostpointercapture",()=>{drag=false;prev=null;});
+// El gesto táctil se maneja por separado para que Safari/iPhone no desplace la página.
+canvas.style.touchAction="none";
+board.style.touchAction="none";
+let activeTouchId=null;
+function touchPoint(event) {
+  const touches=[...event.changedTouches];
+  const touch=touches.find(t=>t.identifier===activeTouchId);
+  return touch?loc(touch):null;
+}
+canvas.addEventListener("touchstart",event=>{
+  if(done||activeTouchId!==null)return;
+  if(event.cancelable)event.preventDefault();
+  const t=event.changedTouches[0];
+  if(!t)return;
+  activeTouchId=t.identifier;drag=true;prev=null;scratch(loc(t));
+},{passive:false});
+canvas.addEventListener("touchmove",event=>{
+  if(activeTouchId===null||!drag)return;
+  if(event.cancelable)event.preventDefault();
+  const p=touchPoint(event);if(p)scratch(p);
+},{passive:false});
+function endTouch(event){
+  if(activeTouchId===null)return;
+  const p=touchPoint(event);if(!p)return;
+  if(event.cancelable)event.preventDefault();
+  activeTouchId=null;drag=false;prev=null;check();
+}
+canvas.addEventListener("touchend",endTouch,{passive:false});
+canvas.addEventListener("touchcancel",endTouch,{passive:false});
+// iOS Safari puede hacer scroll aun con touch-action; bloquearlo sólo al raspar.
+document.addEventListener("touchmove",event=>{
+  if(activeTouchId!==null&&event.cancelable)event.preventDefault();
+},{passive:false});
+canvas.addEventListener("pointerdown",event=>{
+  if(event.pointerType==="touch"||done)return;
+  event.preventDefault();drag=true;prev=null;
+  try{canvas.setPointerCapture(event.pointerId);}catch(e){}
+  scratch(loc(event));
+});
+canvas.addEventListener("pointermove",event=>{
+  if(event.pointerType==="touch"||!drag||done)return;
+  event.preventDefault();scratch(loc(event));
+});
+function end(event){
+  if(event.pointerType==="touch"||!drag)return;
+  drag=false;prev=null;
+  if(canvas.hasPointerCapture(event.pointerId))canvas.releasePointerCapture(event.pointerId);
+  check();
+}
+canvas.addEventListener("pointerup",end);
+canvas.addEventListener("pointercancel",end);
+canvas.addEventListener("lostpointercapture",()=>{if(activeTouchId===null){drag=false;prev=null;}});
 reveal.addEventListener("click",show);reset.addEventListener("click",round);
 if("ResizeObserver"in window)new ResizeObserver(()=>{if(!done&&!drag)setup();}).observe(board);
 const logo=$("hostLogo"),fallback=$("brandFallback");logo.addEventListener("load",()=>{logo.hidden=false;fallback.hidden=true;});logo.addEventListener("error",()=>{logo.hidden=true;fallback.hidden=false;});if(logo.complete&&logo.naturalWidth){logo.hidden=false;fallback.hidden=true;}
