@@ -10,21 +10,19 @@ const url="https://ewfblytwbmzclygiwqcy.supabase.co/rest/v1/rpc/";
 const publishableKey="sb_publishable_DDDdcBd3TlGMkdrD0NSODw_0ENzS4C1";
 let ready=demo,requested=false,requesting=false,pendingPoint=null;
 let claimData=null;
-const whatsappButton=$("claimWhatsapp");
 const whatsappInCard=$("claimWhatsappInCard");
 function updateWhatsappButton(){
-  if(!whatsappButton)return;
+  if(!whatsappInCard)return;
   const isDemoResult=demo&&done&&!!prize;
   const isRealResult=!demo&&done&&!!claimData&&!claimData.redeemed;
   const available=isDemoResult||isRealResult;
-  whatsappButton.hidden=!available;
-  if(whatsappInCard)whatsappInCard.hidden=!available;
+  whatsappInCard.hidden=!available;
   // No dejar otro botón deshabilitado ocupando la pantalla del resultado.
   if(done)reveal.hidden=available;
   if(!available)return;
   let message;
   if(isDemoResult){
-    whatsappButton.textContent="📲 PROBAR ENVÍO A WHATSAPP";
+
     message=[
       "¡Hola HOST! 🔥 Estoy probando el Raspa y Ganá.",
       "🎁 Premio de demostración: "+prize.titulo,
@@ -32,7 +30,7 @@ function updateWhatsappButton(){
       "Quisiera consultar cómo funciona la promoción."
     ].join("\n");
   }else{
-    whatsappButton.textContent="📲 RECLAMAR PREMIO POR WHATSAPP";
+
     message=[
       "¡Hola HOST! 🔥 Gané en el Raspa y Ganá y quiero reclamar mi premio.",
       "🎁 Premio: "+claimData.prize,
@@ -42,11 +40,8 @@ function updateWhatsappButton(){
     ].join("\n");
   }
   const waUrl="https://api.whatsapp.com/send?phone=5493764167507&text="+encodeURIComponent(message);
-  whatsappButton.href=waUrl;
-  if(whatsappInCard){
-    whatsappInCard.href=waUrl;
-    whatsappInCard.textContent=isDemoResult?"📲 PROBAR WHATSAPP":"📲 RECLAMAR POR WHATSAPP";
-  }
+  whatsappInCard.href=waUrl;
+  whatsappInCard.textContent=isDemoResult?"📲 PROBAR WHATSAPP":"📲 RECLAMAR POR WHATSAPP";
 }
 async function rpc(method){
   const response=await fetch(url+method,{
