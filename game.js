@@ -3,6 +3,77 @@
 "use strict";
 const $=id=>document.getElementById(id),canvas=$("scratchCanvas"),board=$("scratchBoard"),ctx=canvas.getContext("2d",{willReadFrequently:true}),status=$("statusText"),reveal=$("revealButton"),reset=$("resetButton");
 let prize,done=false,drag=false,prev=null,strokes=0,W=0,H=0;
+const token=new URLSearchParams(location.search).get("c")||"";
+const demo=!token;
+const validToken=/^HST-[A-F0-9]{40}$/.test(token);
+const url="https://ewfblytwbmzclygiwqcy.supabase.co/rest/v1/rpc/";
+const publishableKey="sb_publishable_DDDdcBd3TlGMkdrD0NSODw_0ENzS4C1";
+let ready=demo,requested=false,requesting=false,pendingPoint=null;
+async function rpc(method){
+  const response=await fetch(url+method,{
+    method:"POST",
+    headers:{"apikey":publishableKey,"Content-Type":"application/json"},
+    body:JSON.stringify({p_token:token})
+  });
+  if(!response.ok)throw Error("No pudimos conectar con HOST");
+  return response.json();
+}
+function resultPrize(data){
+  prize={icono:"🎁",titulo:data.prize,detalle:"CÓDIGO DE CANJE: "+data.claim_code,ganador:true};
+  fill();
+}
+function showCardError(message){
+  ready=false;requested=true;done=true;drag=false;prev=null;
+  canvas.classList.add("revealed");
+  $("prizeIcon").textContent="🎟️";
+  $("prizePretitle").textContent="HOST · RASPÁ Y GANÁ";
+  $("prizeName").textContent=message;
+  $("prizeDetail").textContent="CONSULTÁ EN HOST SI NECESITÁS AYUDA";
+  reveal.disabled=true;status.textContent=message;
+}
+async function loadCard(){
+  if(demo){$("demoNotice").hidden=false;return;}
+  $("demoNotice").hidden=true;
+  if(!validToken){showCardError("QR INVÁLIDO");return;}
+  status.textContent="VERIFICANDO TU TARJETA...";
+  reveal.disabled=true;
+  try{
+    const data=await rpc("host_scratch_status");
+    if(data.state==="ready"){
+      ready=true;
+      $("ticketNumber").textContent=String(data.serial).padStart(6,"0");
+      status.textContent="RASPÁ PARA DESCUBRIR TU PREMIO";
+      reveal.disabled=false;
+    }else if(data.state==="played"||data.state==="redeemed"){
+      $("ticketNumber").textContent=String(data.serial).padStart(6,"0");
+      resultPrize(data);
+      done=true;requested=true;
+      canvas.classList.add("revealed");
+      reveal.disabled=true;
+      status.textContent=data.state==="redeemed"?"PREMIO YA CANJEADO":"ESTA TARJETA YA FUE UTILIZADA";
+    }else showCardError("QR INVÁLIDO");
+  }catch(e){console.error(e);showCardError("ERROR DE CONEXIÓN");}
+}
+async function startClaim(point){
+  if(demo){scratch(point);return;}
+  if(!ready||done||requested)return;
+  pendingPoint=point;
+  if(requesting)return;
+  requesting=true;status.textContent="ACTIVANDO TU TARJETA...";
+  try{
+    const data=await rpc("host_scratch_play");
+    if(data.state==="played"){
+      requested=true;requesting=false;
+      resultPrize(data);
+      status.textContent="¡SEGUÍ RASPANDO!";
+      if(pendingPoint)scratch(pendingPoint);
+    }else{
+      requesting=false;
+      showCardError(data.state==="used"?"ESTA TARJETA YA FUE UTILIZADA":"QR INVÁLIDO");
+    }
+  }catch(e){requesting=false;console.error(e);showCardError("ERROR DE CONEXIÓN");}
+}
+
 function choose(){
 const items=window.HOST_RASPA_CONFIG.premiosDemo,total=items.reduce((n,p)=>n+p.peso,0);
 const n=new Uint32Array(1);crypto.getRandomValues(n);let roll=n[0]/4294967296*total;
@@ -10,6 +81,7 @@ return items.find(p=>(roll-=p.peso)<0)||items.at(-1);
 }
 function fill(){
 $("prizeIcon").textContent=prize.icono;$("prizePretitle").textContent=prize.ganador?"¡TE TOCÓ!":"NO TE DESANIMES";
+$("prizeName").style.fontSize=prize.titulo.length>23?"clamp(22px,6vw,34px)":"clamp(30px,8vw,46px)";
 $("prizeName").textContent=prize.titulo;$("prizeDetail").textContent=prize.detalle;
 }
 function paint(){
@@ -47,7 +119,7 @@ if(done)return;done=true;drag=false;prev=null;canvas.classList.add("revealed");s
 reveal.disabled=true;reveal.textContent="RESULTADO REVELADO ✓";confetti();
 }
 function round(){
-prize=choose();done=false;drag=false;prev=null;strokes=0;fill();canvas.classList.remove("revealed");
+prize=demo?choose():{icono:"🎁",titulo:"TU SORPRESA",detalle:"RASPÁ PARA DESCUBRIR",ganador:true};done=false;drag=false;prev=null;strokes=0;fill();canvas.classList.remove("revealed");
 status.textContent="DESLIZÁ PARA RASPAR";reveal.disabled=false;reveal.innerHTML="REVELAR RESULTADO <span>↗</span>";
 $("confettiLayer").replaceChildren();const n=new Uint32Array(1);crypto.getRandomValues(n);$("ticketNumber").textContent=String(n[0]%1000000).padStart(6,"0");setup();
 }
@@ -65,12 +137,12 @@ canvas.addEventListener("touchstart",event=>{
   if(event.cancelable)event.preventDefault();
   const t=event.changedTouches[0];
   if(!t)return;
-  activeTouchId=t.identifier;drag=true;prev=null;scratch(loc(t));
+  activeTouchId=t.identifier;drag=true;prev=null;startClaim(loc(t));
 },{passive:false});
 canvas.addEventListener("touchmove",event=>{
   if(activeTouchId===null||!drag)return;
   if(event.cancelable)event.preventDefault();
-  const p=touchPoint(event);if(p)scratch(p);
+  const p=touchPoint(event);if(p){if(requesting)pendingPoint=p;else if(ready&&(demo||requested))scratch(p);}
 },{passive:false});
 function endTouch(event){
   if(activeTouchId===null)return;
@@ -88,11 +160,11 @@ canvas.addEventListener("pointerdown",event=>{
   if(event.pointerType==="touch"||done)return;
   event.preventDefault();drag=true;prev=null;
   try{canvas.setPointerCapture(event.pointerId);}catch(e){}
-  scratch(loc(event));
+  startClaim(loc(event));
 });
 canvas.addEventListener("pointermove",event=>{
   if(event.pointerType==="touch"||!drag||done)return;
-  event.preventDefault();scratch(loc(event));
+  event.preventDefault();const p=loc(event);if(requesting)pendingPoint=p;else if(ready&&(demo||requested))scratch(p);
 });
 function end(event){
   if(event.pointerType==="touch"||!drag)return;
@@ -103,8 +175,13 @@ function end(event){
 canvas.addEventListener("pointerup",end);
 canvas.addEventListener("pointercancel",end);
 canvas.addEventListener("lostpointercapture",()=>{if(activeTouchId===null){drag=false;prev=null;}});
-reveal.addEventListener("click",show);
+reveal.addEventListener("click",async()=>{
+  if(demo){show();return;}
+  if(done||!ready)return;
+  if(!requested)await startClaim({x:W/2,y:H/2});
+  if(requested&&!done)show();
+});
 if("ResizeObserver"in window)new ResizeObserver(()=>{if(!done&&!drag)setup();}).observe(board);
 const logo=$("hostLogo"),fallback=$("brandFallback");logo.addEventListener("load",()=>{logo.hidden=false;fallback.hidden=true;});logo.addEventListener("error",()=>{logo.hidden=true;fallback.hidden=false;});if(logo.complete&&logo.naturalWidth){logo.hidden=false;fallback.hidden=true;}
-try{round();}catch(e){console.error(e);status.textContent="NO SE PUDO INICIAR LA DEMO";}
+try{round();loadCard();}catch(e){console.error(e);status.textContent="NO SE PUDO INICIAR EL JUEGO";}
 })();
