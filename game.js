@@ -28,14 +28,14 @@ const d=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(W*d);canvas.heig
 }
 function loc(e){const b=canvas.getBoundingClientRect();return{x:e.clientX-b.left,y:e.clientY-b.top};}
 function scratch(p){
-ctx.globalCompositeOperation="destination-out";ctx.lineWidth=Math.max(70,Math.min(W*.27,105));ctx.lineJoin="round";ctx.lineCap="round";
+ctx.globalCompositeOperation="destination-out";ctx.lineWidth=Math.max(100,Math.min(W*.37,145));ctx.lineJoin="round";ctx.lineCap="round";
 ctx.beginPath();if(prev){ctx.moveTo(prev.x,prev.y);ctx.lineTo(p.x,p.y);ctx.stroke();}else{ctx.arc(p.x,p.y,ctx.lineWidth*.48,0,2*Math.PI);ctx.fill();}
-prev=p;if(++strokes%9===0)check();
+prev=p;if(++strokes%3===0)check();
 }
 function check(){
-if(done)return;let image=ctx.getImageData(0,0,canvas.width,canvas.height),data=image.data,stepX=Math.max(1,Math.round(canvas.width/90)),stepY=Math.max(1,Math.round(canvas.height/60)),erased=0,total=0;
+if(done)return;let image=ctx.getImageData(0,0,canvas.width,canvas.height),data=image.data,stepX=Math.max(1,Math.round(canvas.width/55)),stepY=Math.max(1,Math.round(canvas.height/38)),erased=0,total=0;
 for(let y=0;y<canvas.height;y+=stepY)for(let x=0;x<canvas.width;x+=stepX){total++;if(data[(y*canvas.width+x)*4+3]<120)erased++;}
-const percent=Math.round(erased/total*100);status.textContent="RASPADO "+percent+"% · ¡SEGUÍ!";if(percent>=25)show();
+const percent=Math.round(erased/total*100);status.textContent="RASPADO "+percent+"% · ¡SEGUÍ!";if(percent>=12)show();
 }
 function confetti(){
 if(!prize.ganador||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
