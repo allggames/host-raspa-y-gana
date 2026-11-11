@@ -118,3 +118,6 @@
 @media (max-width: 720px) and (orientation: landscape) and (max-height: 500px) {
   .scratch-board { height: 255px; }
 }
+
+/* iOS Safari: no pan/zoom dentro de la raspadita, scroll normal fuera de ella */
+.scratch-board, #scratchCanvas { touch-action: none !important; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overscroll-behavior: contain; }
