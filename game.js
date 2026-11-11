@@ -11,12 +11,14 @@ const publishableKey="sb_publishable_DDDdcBd3TlGMkdrD0NSODw_0ENzS4C1";
 let ready=demo,requested=false,requesting=false,pendingPoint=null;
 let claimData=null;
 const whatsappButton=$("claimWhatsapp");
+const whatsappInCard=$("claimWhatsappInCard");
 function updateWhatsappButton(){
   if(!whatsappButton)return;
   const isDemoResult=demo&&done&&!!prize;
   const isRealResult=!demo&&done&&!!claimData&&!claimData.redeemed;
   const available=isDemoResult||isRealResult;
   whatsappButton.hidden=!available;
+  if(whatsappInCard)whatsappInCard.hidden=!available;
   // No dejar otro botón deshabilitado ocupando la pantalla del resultado.
   if(done)reveal.hidden=available;
   if(!available)return;
@@ -39,7 +41,12 @@ function updateWhatsappButton(){
       "¿Cómo puedo retirarlo?"
     ].join("\n");
   }
-  whatsappButton.href="https://wa.me/5493764167507?text="+encodeURIComponent(message);
+  const waUrl="https://api.whatsapp.com/send?phone=5493764167507&text="+encodeURIComponent(message);
+  whatsappButton.href=waUrl;
+  if(whatsappInCard){
+    whatsappInCard.href=waUrl;
+    whatsappInCard.textContent=isDemoResult?"📲 PROBAR WHATSAPP":"📲 RECLAMAR POR WHATSAPP";
+  }
 }
 async function rpc(method){
   const response=await fetch(url+method,{
