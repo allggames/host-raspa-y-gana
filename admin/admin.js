@@ -3,7 +3,8 @@ import {requireHostAdminMfa} from "./admin-mfa.js";
 
 const db=createClient("https://ewfblytwbmzclygiwqcy.supabase.co","sb_publishable_DDDdcBd3TlGMkdrD0NSODw_0ENzS4C1");
 const $=id=>document.getElementById(id);
-let current=null,busy=false;
+let current=null,busy=false,pendingOffset=0,pendingItems=[],pendingLoading=false;
+const pageSize=30;
 
 function message(value,error=false){
   $("search-status").textContent=value;
@@ -29,7 +30,7 @@ async function enter(){
   const verified=await requireHostAdminMfa(db);
   if(!verified)return;
   dashboardVisible(true);
-  await refresh();
+  await Promise.all([refresh(),loadPending()]);
 }
 async function refresh(){
   try{
@@ -37,6 +38,86 @@ async function refresh(){
     for(const key of ["total","ready","played","redeemed"])$("stat-"+key).textContent=Number(totals[key]||0).toLocaleString("es-AR");
   }catch(err){message("Error al actualizar: "+err.message,true);}
 }
+
+async function loadPending(){
+  if(pendingLoading)return;
+  pendingLoading=true;
+  $("pending-refresh").disabled=true;
+  $("pending-status").textContent="Cargando premios pendientes...";
+  try{
+    const data=await invoke("host_scratch_admin_pending",{p_limit:pageSize,p_offset:pendingOffset});
+    pendingItems=Array.isArray(data?.items)?data.items:[];
+    renderPending();
+    $("pending-status").textContent=pendingItems.length
+      ? "Mostrando "+(pendingOffset+1)+" a "+(pendingOffset+pendingItems.length)+" de los pendientes."
+      : pendingOffset===0?"¡No hay premios pendientes de entrega!":"No hay más premios en esta página.";
+  }catch(err){
+    pendingItems=[];
+    $("pending-list").replaceChildren();
+    $("pending-status").textContent="No se pudo cargar la lista: "+err.message;
+  }finally{
+    pendingLoading=false;
+    $("pending-refresh").disabled=false;
+  }
+}
+function renderPending(){
+  const list=$("pending-list");
+  list.replaceChildren();
+  const num=n=>String(n).padStart(6,"0");
+  for(const p of pendingItems){
+    const article=document.createElement("article");
+    article.className="pending-card";
+    const details=document.createElement("div");
+    details.className="pending-details";
+    const number=document.createElement("span");
+    number.className="pending-number";
+    number.textContent="TARJETA Nº "+num(p.serial);
+    const prize=document.createElement("strong");
+    prize.className="pending-prize";
+    prize.textContent=p.prize;
+    const code=document.createElement("span");
+    code.className="pending-code";
+    code.textContent="Código: "+p.claim_code;
+    const date=document.createElement("small");
+    date.className="pending-date";
+    date.textContent="Jugado: "+formattedDate(p.scratched_at);
+    details.append(number,prize,code,date);
+    const action=document.createElement("button");
+    action.type="button";
+    action.className="primary pending-deliver";
+    action.textContent="MARCAR COMO ENTREGADO";
+    action.disabled=busy;
+    action.addEventListener("click",()=>deliver(p.claim_code,p.serial));
+    article.append(details,action);
+    list.append(article);
+  }
+  $("pending-prev").hidden=pendingOffset===0;
+  $("pending-next").hidden=pendingItems.length<pageSize;
+  $("pending-page").textContent="Página "+(Math.floor(pendingOffset/pageSize)+1);
+}
+async function deliver(code,serial){
+  if(busy||!code)return;
+  if(!confirm("¿Confirmás que HOST YA ENTREGÓ el premio de la tarjeta Nº "+
+    String(serial).padStart(6,"0")+"? Esta acción registra el canje definitivo."))return;
+  busy=true;
+  for(const button of document.querySelectorAll(".pending-deliver, #redeem"))button.disabled=true;
+  $("pending-status").textContent="Confirmando entrega...";
+  try{
+    const result=await invoke("host_scratch_redeem",{p_claim_code:code});
+    if(result.state!=="redeemed")throw Error(result.state==="invalid"?"Código no reconocido":"Esta tarjeta ya no está pendiente.");
+    if(current?.claim_code===code)await lookup(code);
+    await refresh();
+    if(pendingOffset>0&&pendingItems.length===1)pendingOffset=Math.max(0,pendingOffset-pageSize);
+    $("pending-status").textContent="✅ Premio entregado correctamente.";
+  }catch(err){
+    $("pending-status").textContent="No se pudo confirmar: "+err.message;
+  }finally{
+    busy=false;
+    await loadPending();
+    $("redeem").disabled=false;
+  }
+}
+
 function render(item){
   current=item;
   const visible=item&&item.state!=="not_found";
@@ -77,26 +158,18 @@ $("login-form").addEventListener("submit",async event=>{
 $("logout").addEventListener("click",async()=>{
   await db.auth.signOut();current=null;dashboardVisible(false);$("login-form").reset();render(null);
 });
-$("refresh").addEventListener("click",refresh);
+$("refresh").addEventListener("click",async()=>{await Promise.all([refresh(),loadPending()]);});
+$("pending-refresh").addEventListener("click",()=>{pendingOffset=0;loadPending();});
+$("pending-prev").addEventListener("click",()=>{pendingOffset=Math.max(0,pendingOffset-pageSize);loadPending();});
+$("pending-next").addEventListener("click",()=>{pendingOffset+=pageSize;loadPending();});
 $("lookup-form").addEventListener("submit",async event=>{
   event.preventDefault();
   await lookup($("lookup-input").value);
 });
-$("redeem").addEventListener("click",async()=>{
-  if(busy||!current||current.state!=="played"||!current.claim_code)return;
-  const code=current.claim_code;
-  const serial=current.serial;
-  if(!confirm("¿Confirmás que HOST entregó el premio de la tarjeta Nº "+String(serial).padStart(6,"0")+"? Esta acción registra el canje definitivo."))return;
-  busy=true;$("redeem").disabled=true;message("Registrando entrega...");
-  try{
-    const result=await invoke("host_scratch_redeem",{p_claim_code:code});
-    if(result.state!=="redeemed")throw Error(result.state==="invalid"?"Código no reconocido":"El premio ya no está pendiente.");
-    await lookup(code);
-    await refresh();
-    message("✅ Premio marcado como entregado.");
-  }catch(err){message("No se pudo confirmar: "+err.message,true);}
-  finally{busy=false;$("redeem").disabled=false;}
+$("redeem").addEventListener("click",()=>{
+  if(current?.state==="played"&&current.claim_code)deliver(current.claim_code,current.serial);
 });
+
 (async()=>{
   const {data:{session}}=await db.auth.getSession();
   if(!session)return;
