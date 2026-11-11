@@ -9,6 +9,22 @@ const validToken=/^HST-[A-F0-9]{40}$/.test(token);
 const url="https://ewfblytwbmzclygiwqcy.supabase.co/rest/v1/rpc/";
 const publishableKey="sb_publishable_DDDdcBd3TlGMkdrD0NSODw_0ENzS4C1";
 let ready=demo,requested=false,requesting=false,pendingPoint=null;
+let claimData=null;
+const whatsappButton=$("claimWhatsapp");
+function updateWhatsappButton(){
+  if(!whatsappButton)return;
+  const available=!demo&&claimData&&done&&!claimData.redeemed;
+  whatsappButton.hidden=!available;
+  if(!available)return;
+  const message=[
+    "¡Hola HOST! 🔥 Gané en el Raspa y Ganá y quiero reclamar mi premio.",
+    "🎁 Premio: "+claimData.prize,
+    "🎟️ Tarjeta Nº: "+String(claimData.serial).padStart(6,"0"),
+    "🔐 Código de canje: "+claimData.claim_code,
+    "¿Cómo puedo retirarlo?"
+  ].join("\n");
+  whatsappButton.href="https://wa.me/5493764167507?text="+encodeURIComponent(message);
+}
 async function rpc(method){
   const response=await fetch(url+method,{
     method:"POST",
@@ -19,11 +35,14 @@ async function rpc(method){
   return response.json();
 }
 function resultPrize(data){
+  claimData={prize:data.prize,claim_code:data.claim_code,serial:data.serial,redeemed:data.state==="redeemed"};
   prize={icono:"🎁",titulo:data.prize,detalle:"CÓDIGO DE CANJE: "+data.claim_code,ganador:true};
   fill();
+  updateWhatsappButton();
 }
 function showCardError(message){
   ready=false;requested=true;done=true;drag=false;prev=null;
+  claimData=null;updateWhatsappButton();
   canvas.classList.add("revealed");
   $("prizeIcon").textContent="🎟️";
   $("prizePretitle").textContent="HOST · RASPÁ Y GANÁ";
@@ -51,6 +70,7 @@ async function loadCard(){
       canvas.classList.add("revealed");
       reveal.disabled=true;
       status.textContent=data.state==="redeemed"?"PREMIO YA CANJEADO":"ESTA TARJETA YA FUE UTILIZADA";
+      updateWhatsappButton();
     }else showCardError("QR INVÁLIDO");
   }catch(e){console.error(e);showCardError("ERROR DE CONEXIÓN");}
 }
@@ -116,7 +136,7 @@ for(let i=0;i<48;i++){let e=document.createElement("i");e.className="confetti";e
 }
 function show(){
 if(done)return;done=true;drag=false;prev=null;canvas.classList.add("revealed");status.textContent=prize.ganador?"🔥 ¡QUÉ SUERTE! MIRÁ TU PREMIO":"✨ ¡GRACIAS POR PARTICIPAR!";
-reveal.disabled=true;reveal.textContent="RESULTADO REVELADO ✓";confetti();
+reveal.disabled=true;reveal.textContent="RESULTADO REVELADO ✓";confetti();updateWhatsappButton();
 }
 function round(){
 prize=demo?choose():{icono:"🎁",titulo:"TU SORPRESA",detalle:"RASPÁ PARA DESCUBRIR",ganador:true};done=false;drag=false;prev=null;strokes=0;fill();canvas.classList.remove("revealed");
