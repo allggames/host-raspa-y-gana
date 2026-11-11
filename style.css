@@ -121,3 +121,30 @@
 
 /* iOS Safari: no pan/zoom dentro de la raspadita, scroll normal fuera de ella */
 .scratch-board, #scratchCanvas { touch-action: none !important; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; overscroll-behavior: contain; }
+
+/* Acceso a reclamo tras jugar y conocer el codigo servidor */
+.claim-whatsapp {
+  grid-column:1 / -1;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  min-height:54px;
+  width:100%;
+  padding:14px 18px;
+  border-radius:12px;
+  color:#fff;
+  background:linear-gradient(125deg,#128c43,#25d366);
+  border:1px solid #80efa9;
+  font-size:13px;
+  font-weight:900;
+  text-align:center;
+  text-decoration:none;
+  letter-spacing:.4px;
+  box-shadow:0 10px 25px #0b8f3550;
+}
+.claim-whatsapp[hidden] { display:none !important; }
+@media(max-width:720px){
+  .ticket-actions {grid-template-columns:1fr;}
+  .claim-whatsapp {font-size:12px;min-height:52px;}
+}
