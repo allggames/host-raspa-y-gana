@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090909">
+<title>HOST | Admin Raspa y Ganá</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./admin.css?v=1">
+<script type="module" src="./admin.js?v=1"></script>
+</head>
+<body>
+<header class="header"><div><span class="brand">HOST<span>🔥</span></span><small>ADMINISTRACIÓN · RASPÁ Y GANÁ</small></div><a href="../">Volver al juego</a></header>
+<main>
+  <section class="panel" id="login">
+    <p class="eyebrow">ACCESO PROTEGIDO</p>
+    <h1>ADMIN HOST</h1>
+    <p class="muted">Ingresá con el mismo correo, contraseña y segundo factor del administrador del menú HOST.</p>
+    <form id="login-form">
+      <label>Correo electrónico<input type="email" name="email" autocomplete="username" required></label>
+      <label>Contraseña<input type="password" name="password" autocomplete="current-password" required></label>
+      <button type="submit" id="login-submit" class="primary">INGRESAR</button>
+    </form>
+    <p id="login-message" role="alert"></p>
+  </section>
+  <section id="dashboard" hidden>
+    <div class="dashboard-head"><div><p class="eyebrow">PANEL DE CONTROL</p><h1>PREMIOS HOST</h1></div><button id="logout" class="secondary" type="button">Cerrar sesión</button></div>
+    <div class="stats" aria-label="Estadísticas de tarjetas">
+      <div class="stat"><strong id="stat-total">—</strong><span>TARJETAS TOTALES</span></div>
+      <div class="stat"><strong id="stat-ready">—</strong><span>DISPONIBLES</span></div>
+      <div class="stat"><strong id="stat-played">—</strong><span>JUGADAS · SIN ENTREGAR</span></div>
+      <div class="stat"><strong id="stat-redeemed">—</strong><span>CANJEADAS</span></div>
+    </div>
+    <section class="panel">
+      <h2>VERIFICAR PREMIO</h2>
+      <p class="muted">Pegá el código de canje que el cliente envió por WhatsApp o el número de tarjeta.</p>
+      <form id="lookup-form" class="find">
+        <input id="lookup-input" aria-label="Código de canje o número de tarjeta" placeholder="Código o número de tarjeta" maxlength="64" required autocomplete="off">
+        <button type="submit" class="primary" id="lookup-submit">BUSCAR</button>
+      </form>
+      <p id="search-status" class="feedback" role="status"></p>
+      <div id="result" class="result" hidden>
+        <div class="result-top"><span id="result-badge" class="status"></span><span id="result-number"></span></div>
+        <h3 id="result-prize"></h3>
+        <div class="detail"><span>Código</span><strong id="result-code"></strong></div>
+        <div class="detail"><span>Jugado</span><strong id="result-played"></strong></div>
+        <div class="detail"><span>Entregado</span><strong id="result-redeemed"></strong></div>
+        <button id="redeem" class="primary redeem" type="button" hidden>MARCAR COMO ENTREGADO</button>
+        <p class="muted notice">Verificá el premio físicamente antes de confirmar. La acción no se puede repetir.</p>
+      </div>
+    </section>
+    <button type="button" class="secondary refresh" id="refresh">Actualizar contadores</button>
+  </section>
+</main>
+<footer>HOST POSADAS · CONTROL DE PREMIOS</footer>
+</body>
+</html>
