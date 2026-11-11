@@ -13,16 +13,32 @@ let claimData=null;
 const whatsappButton=$("claimWhatsapp");
 function updateWhatsappButton(){
   if(!whatsappButton)return;
-  const available=!demo&&claimData&&done&&!claimData.redeemed;
+  const isDemoResult=demo&&done&&!!prize;
+  const isRealResult=!demo&&done&&!!claimData&&!claimData.redeemed;
+  const available=isDemoResult||isRealResult;
   whatsappButton.hidden=!available;
+  // No dejar otro botón deshabilitado ocupando la pantalla del resultado.
+  if(done)reveal.hidden=available;
   if(!available)return;
-  const message=[
-    "¡Hola HOST! 🔥 Gané en el Raspa y Ganá y quiero reclamar mi premio.",
-    "🎁 Premio: "+claimData.prize,
-    "🎟️ Tarjeta Nº: "+String(claimData.serial).padStart(6,"0"),
-    "🔐 Código de canje: "+claimData.claim_code,
-    "¿Cómo puedo retirarlo?"
-  ].join("\n");
+  let message;
+  if(isDemoResult){
+    whatsappButton.textContent="📲 PROBAR ENVÍO A WHATSAPP";
+    message=[
+      "¡Hola HOST! 🔥 Estoy probando el Raspa y Ganá.",
+      "🎁 Premio de demostración: "+prize.titulo,
+      "⚠️ Este es un ejemplo: NO es un premio válido ni se puede canjear.",
+      "Quisiera consultar cómo funciona la promoción."
+    ].join("\n");
+  }else{
+    whatsappButton.textContent="📲 RECLAMAR PREMIO POR WHATSAPP";
+    message=[
+      "¡Hola HOST! 🔥 Gané en el Raspa y Ganá y quiero reclamar mi premio.",
+      "🎁 Premio: "+claimData.prize,
+      "🎟️ Tarjeta Nº: "+String(claimData.serial).padStart(6,"0"),
+      "🔐 Código de canje: "+claimData.claim_code,
+      "¿Cómo puedo retirarlo?"
+    ].join("\n");
+  }
   whatsappButton.href="https://wa.me/5493764167507?text="+encodeURIComponent(message);
 }
 async function rpc(method){
@@ -140,7 +156,7 @@ reveal.disabled=true;reveal.textContent="RESULTADO REVELADO ✓";confetti();upda
 }
 function round(){
 prize=demo?choose():{icono:"🎁",titulo:"TU SORPRESA",detalle:"RASPÁ PARA DESCUBRIR",ganador:true};done=false;drag=false;prev=null;strokes=0;fill();canvas.classList.remove("revealed");
-status.textContent="DESLIZÁ PARA RASPAR";reveal.disabled=false;reveal.innerHTML="REVELAR RESULTADO <span>↗</span>";
+status.textContent="DESLIZÁ PARA RASPAR";reveal.hidden=false;reveal.disabled=false;reveal.innerHTML="REVELAR RESULTADO <span>↗</span>";
 $("confettiLayer").replaceChildren();const n=new Uint32Array(1);crypto.getRandomValues(n);$("ticketNumber").textContent=String(n[0]%1000000).padStart(6,"0");setup();
 }
 // El gesto táctil se maneja por separado para que Safari/iPhone no desplace la página.
