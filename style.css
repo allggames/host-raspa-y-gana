@@ -148,3 +148,33 @@
   .ticket-actions {grid-template-columns:1fr;}
   .claim-whatsapp {font-size:12px;min-height:52px;}
 }
+
+/* WhatsApp visible sobre la tarjeta al revelar el premio */
+.claim-whatsapp-inside{
+  display:inline-flex;
+  flex-shrink:0;
+  position:relative;
+  z-index:3;
+  align-items:center;
+  justify-content:center;
+  margin-top:14px;
+  max-width:94%;
+  min-height:48px;
+  padding:12px 17px;
+  background:#20ae57;
+  border:2px solid #93efad;
+  color:white;
+  font:900 13px Barlow,Arial,sans-serif;
+  letter-spacing:.15px;
+  border-radius:11px;
+  text-decoration:none;
+  box-shadow:0 8px 25px #0008;
+  touch-action:manipulation;
+}
+.claim-whatsapp-inside[hidden]{display:none!important}
+@media(max-width:720px){
+  .claim-whatsapp-inside{padding:10px 12px;min-height:46px;font-size:12px;margin-top:12px;}
+  .hidden-prize:has(.claim-whatsapp-inside:not([hidden])) .prize-icon{font-size:35px}
+  .hidden-prize:has(.claim-whatsapp-inside:not([hidden])) .prize-name{font-size:clamp(23px,6vw,34px)!important}
+  .hidden-prize:has(.claim-whatsapp-inside:not([hidden])) .prize-detail{font-size:10px;overflow-wrap:anywhere}
+}
