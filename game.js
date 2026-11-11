@@ -103,7 +103,7 @@ function end(event){
 canvas.addEventListener("pointerup",end);
 canvas.addEventListener("pointercancel",end);
 canvas.addEventListener("lostpointercapture",()=>{if(activeTouchId===null){drag=false;prev=null;}});
-reveal.addEventListener("click",show);reset.addEventListener("click",round);
+reveal.addEventListener("click",show);
 if("ResizeObserver"in window)new ResizeObserver(()=>{if(!done&&!drag)setup();}).observe(board);
 const logo=$("hostLogo"),fallback=$("brandFallback");logo.addEventListener("load",()=>{logo.hidden=false;fallback.hidden=true;});logo.addEventListener("error",()=>{logo.hidden=true;fallback.hidden=false;});if(logo.complete&&logo.naturalWidth){logo.hidden=false;fallback.hidden=true;}
 try{round();}catch(e){console.error(e);status.textContent="NO SE PUDO INICIAR LA DEMO";}
