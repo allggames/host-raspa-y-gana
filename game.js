@@ -11,10 +11,47 @@ const publishableKey="sb_publishable_DDDdcBd3TlGMkdrD0NSODw_0ENzS4C1";
 let ready=demo,requested=false,requesting=false,pendingPoint=null;
 let claimData=null;
 const whatsappInCard=$("claimWhatsappInCard");
+const couponCountdown=$("couponCountdown");
+let countdownTimer=null;
+function isExpired(){
+ return !!(claimData&&claimData.expires_at&&Date.now()>=Date.parse(claimData.expires_at));
+}
+function timeLeft(iso){
+ const ms=Math.max(0,Date.parse(iso)-Date.now());
+ const seconds=Math.ceil(ms/1000);
+ const d=Math.floor(seconds/86400),h=Math.floor(seconds%86400/3600);
+ const m=Math.floor(seconds%3600/60),s=seconds%60;
+ return d+"d "+String(h).padStart(2,"0")+"h "+String(m).padStart(2,"0")+"m "+String(s).padStart(2,"0")+"s";
+}
+function renderCountdown(){
+ if(!couponCountdown)return;
+ if(demo||!claimData||!done||!claimData.expires_at){
+   couponCountdown.hidden=true;return;
+ }
+ couponCountdown.hidden=false;
+ if(claimData.redeemed){
+   couponCountdown.textContent="✓ PREMIO YA CANJEADO";
+   couponCountdown.dataset.expired="false";
+   return;
+ }
+ const expired=isExpired();
+ couponCountdown.dataset.expired=String(expired);
+ couponCountdown.textContent=expired?"CUPÓN VENCIDO":"VENCE EN "+timeLeft(claimData.expires_at);
+ if(expired){
+   status.textContent="CUPÓN VENCIDO · NO SE PUEDE CANJEAR";
+   whatsappInCard.hidden=true;
+ }
+}
+function activateCountdown(){
+ if(countdownTimer!==null)clearInterval(countdownTimer);
+ renderCountdown();
+ if(!demo&&claimData?.expires_at&&done&&!claimData.redeemed)
+   countdownTimer=setInterval(()=>{renderCountdown();updateWhatsappButton();},1000);
+}
 function updateWhatsappButton(){
   if(!whatsappInCard)return;
   const isDemoResult=demo&&done&&!!prize;
-  const isRealResult=!demo&&done&&!!claimData&&!claimData.redeemed;
+  const isRealResult=!demo&&done&&!!claimData&&!claimData.redeemed&&!isExpired();
   const available=isDemoResult||isRealResult;
   whatsappInCard.hidden=!available;
   // No dejar otro botón deshabilitado ocupando la pantalla del resultado.
@@ -53,14 +90,14 @@ async function rpc(method){
   return response.json();
 }
 function resultPrize(data){
-  claimData={prize:data.prize,claim_code:data.claim_code,serial:data.serial,redeemed:data.state==="redeemed"};
+  claimData={prize:data.prize,claim_code:data.claim_code,serial:data.serial,redeemed:data.state==="redeemed",expires_at:data.expires_at};
   prize={icono:"🎁",titulo:data.prize,detalle:"CÓDIGO DE CANJE: "+data.claim_code,ganador:true};
   fill();
   updateWhatsappButton();
 }
 function showCardError(message){
   ready=false;requested=true;done=true;drag=false;prev=null;
-  claimData=null;updateWhatsappButton();
+  claimData=null;updateWhatsappButton();activateCountdown();
   canvas.classList.add("revealed");
   $("prizeIcon").textContent="🎟️";
   $("prizePretitle").textContent="HOST · RASPÁ Y GANÁ";
@@ -81,14 +118,15 @@ async function loadCard(){
       $("ticketNumber").textContent=String(data.serial).padStart(6,"0");
       status.textContent="RASPÁ PARA DESCUBRIR TU PREMIO";
       reveal.disabled=false;
-    }else if(data.state==="played"||data.state==="redeemed"){
+    }else if(data.state==="played"||data.state==="redeemed"||data.state==="expired"){
       $("ticketNumber").textContent=String(data.serial).padStart(6,"0");
       resultPrize(data);
       done=true;requested=true;
       canvas.classList.add("revealed");
       reveal.disabled=true;
-      status.textContent=data.state==="redeemed"?"PREMIO YA CANJEADO":"ESTA TARJETA YA FUE UTILIZADA";
+      status.textContent=data.state==="redeemed"?"PREMIO YA CANJEADO":data.state==="expired"?"CUPÓN VENCIDO":"ESTA TARJETA YA FUE UTILIZADA";
       updateWhatsappButton();
+      activateCountdown();
     }else showCardError("QR INVÁLIDO");
   }catch(e){console.error(e);showCardError("ERROR DE CONEXIÓN");}
 }
@@ -154,9 +192,10 @@ for(let i=0;i<48;i++){let e=document.createElement("i");e.className="confetti";e
 }
 function show(){
 if(done)return;done=true;drag=false;prev=null;canvas.classList.add("revealed");status.textContent=prize.ganador?"🔥 ¡QUÉ SUERTE! MIRÁ TU PREMIO":"✨ ¡GRACIAS POR PARTICIPAR!";
-reveal.disabled=true;reveal.textContent="RESULTADO REVELADO ✓";confetti();updateWhatsappButton();
+reveal.disabled=true;reveal.textContent="RESULTADO REVELADO ✓";confetti();updateWhatsappButton();activateCountdown();
 }
 function round(){
+claimData=null;if(countdownTimer!==null){clearInterval(countdownTimer);countdownTimer=null;}couponCountdown.hidden=true;
 prize=demo?choose():{icono:"🎁",titulo:"TU SORPRESA",detalle:"RASPÁ PARA DESCUBRIR",ganador:true};done=false;drag=false;prev=null;strokes=0;fill();canvas.classList.remove("revealed");
 status.textContent="DESLIZÁ PARA RASPAR";reveal.hidden=false;reveal.disabled=false;reveal.innerHTML="REVELAR RESULTADO <span>↗</span>";
 $("confettiLayer").replaceChildren();const n=new Uint32Array(1);crypto.getRandomValues(n);$("ticketNumber").textContent=String(n[0]%1000000).padStart(6,"0");setup();
