@@ -178,3 +178,21 @@
   .hidden-prize:has(.claim-whatsapp-inside:not([hidden])) .prize-name{font-size:clamp(23px,6vw,34px)!important}
   .hidden-prize:has(.claim-whatsapp-inside:not([hidden])) .prize-detail{font-size:10px;overflow-wrap:anywhere}
 }
+
+/* Cupón de siete días: la cuenta sólo aparece después de jugar con QR real */
+.coupon-countdown{
+ position:relative;z-index:4;margin-top:7px;
+ padding:7px 12px;border-radius:8px;
+ background:#ffc32922;border:1px solid #ffc32982;
+ font:900 clamp(11px,2vw,13px) Barlow,Arial,sans-serif;
+ letter-spacing:.5px;color:#ffd262;text-align:center;
+ font-variant-numeric:tabular-nums;
+}
+.coupon-countdown[hidden]{display:none!important}
+.coupon-countdown[data-expired="true"]{background:#611515ba;border-color:#ff5a5a;color:#fff}
+@media(max-width:720px){
+ .coupon-countdown{font-size:11px;padding:7px 9px;margin-top:8px}
+ .hidden-prize:has(.coupon-countdown:not([hidden])) .prize-icon{font-size:30px}
+ .hidden-prize:has(.coupon-countdown:not([hidden])) .prize-name{font-size:clamp(22px,5.5vw,32px)!important}
+ .hidden-prize:has(.coupon-countdown:not([hidden])) .claim-whatsapp-inside{margin-top:8px}
+}
