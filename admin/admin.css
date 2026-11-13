@@ -18,3 +18,15 @@
   .pending-card{flex-direction:column;align-items:stretch;padding:14px}
   .pending-deliver{width:100%}
 }
+
+/* Vencimiento de premios HOST, visible en panel y buscador */
+.expiry-countdown{color:#ffd468;font-variant-numeric:tabular-nums}
+.expiry-countdown[data-expired="true"]{color:#ff6363;font-weight:900}
+.pending-expiry{display:block;color:#ffd468;font-size:13px;font-weight:900;font-variant-numeric:tabular-nums;margin-top:5px}
+.pending-expiry[data-expired="true"]{color:#ff6363}
+.pending-card:has(.pending-expiry[data-expired="true"]){border-color:#be3b3b;background:#2b1010}
+.pending-deliver:disabled{background:#432021;color:#ff9696;opacity:1;cursor:not-allowed;border:1px solid #914141}
+.status[data-status="expired"]{background:#5a1515;color:#ffc1c1;border:1px solid #db4949}
+.stats{grid-template-columns:repeat(5,1fr)}
+@media(max-width:800px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}}
