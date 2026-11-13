@@ -55,7 +55,7 @@ function updateWhatsappButton(){
   const available=isDemoResult||isRealResult;
   whatsappInCard.hidden=!available;
   // No dejar otro botón deshabilitado ocupando la pantalla del resultado.
-  if(done)reveal.hidden=available;
+  if(done)reveal.hidden=true;
   if(!available)return;
   let message;
   if(isDemoResult){
