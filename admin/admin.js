@@ -5,6 +5,39 @@ const db=createClient("https://ewfblytwbmzclygiwqcy.supabase.co","sb_publishable
 const $=id=>document.getElementById(id);
 let current=null,busy=false,pendingOffset=0,pendingItems=[],pendingLoading=false;
 const pageSize=30;
+function remaining(expiresAt){
+ if(!expiresAt)return "—";
+ const ms=Date.parse(expiresAt)-Date.now();
+ if(!Number.isFinite(ms)||ms<=0)return "VENCIDO";
+ const total=Math.ceil(ms/1000);
+ const d=Math.floor(total/86400);
+ const h=Math.floor(total%86400/3600);
+ const m=Math.floor(total%3600/60);
+ const s=total%60;
+ return "Vence en "+d+"d "+String(h).padStart(2,"0")+"h "+String(m).padStart(2,"0")+"m "+String(s).padStart(2,"0")+"s";
+}
+function isExpiredDate(expiresAt){
+ return !!expiresAt&&Date.now()>=Date.parse(expiresAt);
+}
+function updateExpiryUI(){
+ const field=$("result-countdown");
+ if(current?.state==="redeemed")field.textContent="YA ENTREGADO";
+ else field.textContent=current?.expires_at?remaining(current.expires_at):"—";
+ field.dataset.expired=String(current?.state==="expired"||isExpiredDate(current?.expires_at)&&current?.state==="played");
+ if(current?.state==="played"&&isExpiredDate(current.expires_at)){
+   $("result-badge").textContent="VENCIDO";
+   $("result-badge").dataset.status="expired";
+ }
+ if(current?.state==="played"&&isExpiredDate(current.expires_at))$("redeem").hidden=true;
+ for(const tag of document.querySelectorAll(".pending-expiry")){
+   const expired=isExpiredDate(tag.dataset.expires);
+   tag.textContent=expired?"CUPÓN VENCIDO":remaining(tag.dataset.expires);
+   tag.dataset.expired=String(expired);
+   const button=tag.closest(".pending-card")?.querySelector(".pending-deliver");
+   if(button){button.disabled=busy||expired;button.textContent=expired?"CUPÓN VENCIDO":"MARCAR COMO ENTREGADO";}
+ }
+}
+setInterval(updateExpiryUI,1000);
 
 function message(value,error=false){
   $("search-status").textContent=value;
@@ -35,7 +68,7 @@ async function enter(){
 async function refresh(){
   try{
     const totals=await invoke("host_scratch_admin_overview");
-    for(const key of ["total","ready","played","redeemed"])$("stat-"+key).textContent=Number(totals[key]||0).toLocaleString("es-AR");
+    for(const key of ["total","ready","played","redeemed","expired"])$("stat-"+key).textContent=Number(totals[key]||0).toLocaleString("es-AR");
   }catch(err){message("Error al actualizar: "+err.message,true);}
 }
 
@@ -81,12 +114,18 @@ function renderPending(){
     const date=document.createElement("small");
     date.className="pending-date";
     date.textContent="Jugado: "+formattedDate(p.scratched_at);
-    details.append(number,prize,code,date);
+    const expiry=document.createElement("small");
+    expiry.className="pending-expiry";
+    expiry.dataset.expires=p.expires_at||"";
+    expiry.textContent=p.state==="expired"?"CUPÓN VENCIDO":remaining(p.expires_at);
+    expiry.dataset.expired=String(p.state==="expired"||isExpiredDate(p.expires_at));
+    details.append(number,prize,code,date,expiry);
     const action=document.createElement("button");
     action.type="button";
     action.className="primary pending-deliver";
     action.textContent="MARCAR COMO ENTREGADO";
-    action.disabled=busy;
+    action.disabled=busy||p.state==="expired"||isExpiredDate(p.expires_at);
+    if(action.disabled&&!busy)action.textContent="CUPÓN VENCIDO";
     action.addEventListener("click",()=>deliver(p.claim_code,p.serial));
     article.append(details,action);
     list.append(article);
@@ -94,9 +133,15 @@ function renderPending(){
   $("pending-prev").hidden=pendingOffset===0;
   $("pending-next").hidden=pendingItems.length<pageSize;
   $("pending-page").textContent="Página "+(Math.floor(pendingOffset/pageSize)+1);
+  updateExpiryUI();
 }
 async function deliver(code,serial){
   if(busy||!code)return;
+  const deadline=(pendingItems.find(p=>p.claim_code===code)||current)?.expires_at;
+  if(isExpiredDate(deadline)){
+    $("pending-status").textContent="CUPÓN VENCIDO: no se puede entregar.";
+    updateExpiryUI();return;
+  }
   if(!confirm("¿Confirmás que HOST YA ENTREGÓ el premio de la tarjeta Nº "+
     String(serial).padStart(6,"0")+"? Esta acción registra el canje definitivo."))return;
   busy=true;
@@ -104,7 +149,7 @@ async function deliver(code,serial){
   $("pending-status").textContent="Confirmando entrega...";
   try{
     const result=await invoke("host_scratch_redeem",{p_claim_code:code});
-    if(result.state!=="redeemed")throw Error(result.state==="invalid"?"Código no reconocido":"Esta tarjeta ya no está pendiente.");
+    if(result.state!=="redeemed")throw Error(result.state==="expired"?"CUPÓN VENCIDO: pasaron los 7 días.":result.state==="invalid"?"Código no reconocido":"Esta tarjeta ya no está pendiente.");
     if(current?.claim_code===code)await lookup(code);
     await refresh();
     if(pendingOffset>0&&pendingItems.length===1)pendingOffset=Math.max(0,pendingOffset-pageSize);
@@ -123,7 +168,7 @@ function render(item){
   const visible=item&&item.state!=="not_found";
   $("result").hidden=!visible;
   if(!visible)return;
-  const status={ready:"DISPONIBLE",played:"JUGADA · PENDIENTE",redeemed:"YA ENTREGADA"};
+  const status={ready:"DISPONIBLE",played:"JUGADA · PENDIENTE",redeemed:"YA ENTREGADA",expired:"CUPÓN VENCIDO"};
   $("result-badge").textContent=status[item.state]||item.state;
   $("result-badge").dataset.status=item.state;
   $("result-number").textContent="TARJETA Nº "+String(item.serial).padStart(6,"0");
@@ -131,7 +176,9 @@ function render(item){
   $("result-code").textContent=item.claim_code||"Aún no jugada";
   $("result-played").textContent=formattedDate(item.scratched_at);
   $("result-redeemed").textContent=formattedDate(item.redeemed_at);
-  $("redeem").hidden=item.state!=="played"||!item.claim_code;
+  $("result-expiry-date").textContent=formattedDate(item.expires_at);
+  $("redeem").hidden=item.state!=="played"||!item.claim_code||isExpiredDate(item.expires_at);
+  updateExpiryUI();
 }
 async function lookup(value){
   message("Buscando tarjeta...");
