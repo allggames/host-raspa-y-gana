@@ -30,3 +30,7 @@
 .stats{grid-template-columns:repeat(5,1fr)}
 @media(max-width:800px){.stats{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+/* Historial de premios efectivamente canjeados */
+.redeemed-card{border-color:#285e42;background:#0f1d16}
+.redeemed-date{color:#8ef0b2;font-size:13px;font-weight:800}
