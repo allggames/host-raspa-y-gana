@@ -7,8 +7,8 @@
 <title>HOST | Admin Raspa y Ganá</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./admin.css?v=3">
-<script type="module" src="./admin.js?v=3"></script>
+<link rel="stylesheet" href="./admin.css?v=4">
+<script type="module" src="./admin.js?v=4"></script>
 </head>
 <body>
 <header class="header"><div><span class="brand">HOST<span>🔥</span></span><small>ADMINISTRACIÓN · RASPÁ Y GANÁ</small></div><a href="../">Volver al juego</a></header>
@@ -65,6 +65,20 @@
         <button type="button" id="pending-prev" class="secondary" hidden>Anterior</button>
         <span id="pending-page" class="muted"></span>
         <button type="button" id="pending-next" class="secondary" hidden>Ver más</button>
+      </div>
+    </section>
+    <section class="panel" id="redeemed-section">
+      <div class="pending-header">
+        <div><p class="eyebrow">HISTORIAL</p><h2>PREMIOS CANJEADOS</h2></div>
+        <button class="secondary" type="button" id="redeemed-refresh">Actualizar historial</button>
+      </div>
+      <p class="muted">Todos los premios que ya fueron entregados, del más reciente al más antiguo.</p>
+      <p id="redeemed-status" class="feedback" role="status"></p>
+      <div id="redeemed-list" class="pending-list"></div>
+      <div class="pending-pagination">
+        <button type="button" id="redeemed-prev" class="secondary" hidden>Anterior</button>
+        <span id="redeemed-page" class="muted"></span>
+        <button type="button" id="redeemed-next" class="secondary" hidden>Ver más</button>
       </div>
     </section>
     <button type="button" class="secondary refresh" id="refresh">Actualizar contadores</button>
