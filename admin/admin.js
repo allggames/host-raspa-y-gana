@@ -3,7 +3,7 @@ import {requireHostAdminMfa} from "./admin-mfa.js";
 
 const db=createClient("https://ewfblytwbmzclygiwqcy.supabase.co","sb_publishable_DDDdcBd3TlGMkdrD0NSODw_0ENzS4C1");
 const $=id=>document.getElementById(id);
-let current=null,busy=false,pendingOffset=0,pendingItems=[],pendingLoading=false;
+let current=null,busy=false,pendingOffset=0,pendingItems=[],pendingLoading=false,redeemedOffset=0,redeemedLoading=false;
 const pageSize=30;
 function remaining(expiresAt){
  if(!expiresAt)return "—";
@@ -63,7 +63,7 @@ async function enter(){
   const verified=await requireHostAdminMfa(db);
   if(!verified)return;
   dashboardVisible(true);
-  await Promise.all([refresh(),loadPending()]);
+  await Promise.all([refresh(),loadPending(),loadRedeemed()]);
 }
 async function refresh(){
   try{
@@ -135,6 +135,56 @@ function renderPending(){
   $("pending-page").textContent="Página "+(Math.floor(pendingOffset/pageSize)+1);
   updateExpiryUI();
 }
+
+async function loadRedeemed(){
+  if(redeemedLoading)return;
+  redeemedLoading=true;
+  $("redeemed-refresh").disabled=true;
+  $("redeemed-status").textContent="Cargando premios canjeados...";
+  try{
+    const data=await invoke("host_scratch_admin_redeemed",{p_limit:pageSize,p_offset:redeemedOffset});
+    const items=Array.isArray(data?.items)?data.items:[];
+    const list=$("redeemed-list");
+    list.replaceChildren();
+    for(const p of items){
+      const article=document.createElement("article");
+      article.className="pending-card redeemed-card";
+      const details=document.createElement("div");
+      details.className="pending-details";
+      const number=document.createElement("span");
+      number.className="pending-number";
+      number.textContent="TARJETA Nº "+String(p.serial).padStart(6,"0");
+      const prize=document.createElement("strong");
+      prize.className="pending-prize";
+      prize.textContent=p.prize;
+      const code=document.createElement("span");
+      code.className="pending-code";
+      code.textContent="Código: "+(p.claim_code||"—");
+      const played=document.createElement("small");
+      played.className="pending-date";
+      played.textContent="Jugado: "+formattedDate(p.scratched_at);
+      const delivered=document.createElement("small");
+      delivered.className="redeemed-date";
+      delivered.textContent="✅ Entregado: "+formattedDate(p.redeemed_at);
+      details.append(number,prize,code,played,delivered);
+      article.append(details);
+      list.append(article);
+    }
+    $("redeemed-prev").hidden=redeemedOffset===0;
+    $("redeemed-next").hidden=items.length<pageSize;
+    $("redeemed-page").textContent="Página "+(Math.floor(redeemedOffset/pageSize)+1);
+    $("redeemed-status").textContent=items.length
+      ?"Mostrando "+(redeemedOffset+1)+" a "+(redeemedOffset+items.length)+" de los canjes."
+      :redeemedOffset===0?"Todavía no hay premios canjeados.":"No hay más canjes en esta página.";
+  }catch(err){
+    $("redeemed-list").replaceChildren();
+    $("redeemed-status").textContent="No se pudo cargar el historial: "+err.message;
+  }finally{
+    redeemedLoading=false;
+    $("redeemed-refresh").disabled=false;
+  }
+}
+
 async function deliver(code,serial){
   if(busy||!code)return;
   const deadline=(pendingItems.find(p=>p.claim_code===code)||current)?.expires_at;
@@ -151,7 +201,7 @@ async function deliver(code,serial){
     const result=await invoke("host_scratch_redeem",{p_claim_code:code});
     if(result.state!=="redeemed")throw Error(result.state==="expired"?"CUPÓN VENCIDO: pasaron los 7 días.":result.state==="invalid"?"Código no reconocido":"Esta tarjeta ya no está pendiente.");
     if(current?.claim_code===code)await lookup(code);
-    await refresh();
+    await Promise.all([refresh(),loadRedeemed()]);
     if(pendingOffset>0&&pendingItems.length===1)pendingOffset=Math.max(0,pendingOffset-pageSize);
     $("pending-status").textContent="✅ Premio entregado correctamente.";
   }catch(err){
@@ -205,6 +255,9 @@ $("login-form").addEventListener("submit",async event=>{
 $("logout").addEventListener("click",async()=>{
   await db.auth.signOut();current=null;dashboardVisible(false);$("login-form").reset();render(null);
 });
+$("redeemed-refresh").addEventListener("click",()=>{redeemedOffset=0;loadRedeemed();});
+$("redeemed-prev").addEventListener("click",()=>{redeemedOffset=Math.max(0,redeemedOffset-pageSize);loadRedeemed();});
+$("redeemed-next").addEventListener("click",()=>{redeemedOffset+=pageSize;loadRedeemed();});
 $("refresh").addEventListener("click",async()=>{await Promise.all([refresh(),loadPending()]);});
 $("pending-refresh").addEventListener("click",()=>{pendingOffset=0;loadPending();});
 $("pending-prev").addEventListener("click",()=>{pendingOffset=Math.max(0,pendingOffset-pageSize);loadPending();});
