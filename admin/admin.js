@@ -258,7 +258,7 @@ $("logout").addEventListener("click",async()=>{
 $("redeemed-refresh").addEventListener("click",()=>{redeemedOffset=0;loadRedeemed();});
 $("redeemed-prev").addEventListener("click",()=>{redeemedOffset=Math.max(0,redeemedOffset-pageSize);loadRedeemed();});
 $("redeemed-next").addEventListener("click",()=>{redeemedOffset+=pageSize;loadRedeemed();});
-$("refresh").addEventListener("click",async()=>{await Promise.all([refresh(),loadPending()]);});
+$("refresh").addEventListener("click",async()=>{await Promise.all([refresh(),loadPending(),loadRedeemed()]);});
 $("pending-refresh").addEventListener("click",()=>{pendingOffset=0;loadPending();});
 $("pending-prev").addEventListener("click",()=>{pendingOffset=Math.max(0,pendingOffset-pageSize);loadPending();});
 $("pending-next").addEventListener("click",()=>{pendingOffset+=pageSize;loadPending();});
