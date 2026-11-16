@@ -4,14 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090909">
-<title>HOST | Admin Raspa y Ganá</title>
+<title>HOST | Administrador de juegos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./admin.css?v=4">
 <script type="module" src="./admin.js?v=4"></script>
+<script type="module" src="./wheel-admin.js?v=1"></script>
 </head>
 <body>
-<header class="header"><div><span class="brand">HOST<span>🔥</span></span><small>ADMINISTRACIÓN · RASPÁ Y GANÁ</small></div><a href="../">Volver al juego</a></header>
+<header class="header"><div><span class="brand">HOST<span>🔥</span></span><small>ADMINISTRACIÓN · JUEGOS HOST</small></div><a href="../">Volver a Raspa y Ganá</a></header>
 <main>
   <section class="panel" id="login">
     <p class="eyebrow">ACCESO PROTEGIDO</p>
@@ -26,6 +27,11 @@
   </section>
   <section id="dashboard" hidden>
     <div class="dashboard-head"><div><p class="eyebrow">PANEL DE CONTROL</p><h1>PREMIOS HOST</h1></div><button id="logout" class="secondary" type="button">Cerrar sesión</button></div>
+    <nav class="game-tabs" aria-label="Elegir juego">
+      <button type="button" id="tab-scratch" class="primary" aria-pressed="true">🎟️ RASPA Y GANÁ</button>
+      <button type="button" id="tab-wheel" class="secondary" aria-pressed="false">🎰 RULETA HOST</button>
+    </nav>
+    <div id="scratch-dashboard">
     <div class="stats" aria-label="Estadísticas de tarjetas">
       <div class="stat"><strong id="stat-total">—</strong><span>TARJETAS TOTALES</span></div>
       <div class="stat"><strong id="stat-ready">—</strong><span>DISPONIBLES</span></div>
@@ -82,6 +88,24 @@
       </div>
     </section>
     <button type="button" class="secondary refresh" id="refresh">Actualizar contadores</button>
+    </div>
+    <div id="wheel-dashboard" hidden>
+      <div class="stats">
+        <div class="stat"><strong id="wheel-players">—</strong><span>CLIENTES REGISTRADOS</span></div>
+        <div class="stat"><strong id="wheel-total">—</strong><span>PREMIOS OBTENIDOS</span></div>
+        <div class="stat"><strong id="wheel-pending">—</strong><span>PENDIENTES</span></div>
+        <div class="stat"><strong id="wheel-redeemed">—</strong><span>CANJEADOS</span></div>
+        <div class="stat"><strong id="wheel-expired">—</strong><span>VENCIDOS</span></div>
+      </div>
+      <section class="panel">
+        <div class="pending-header"><div><p class="eyebrow">RULETA HOST</p><h2>CLIENTES Y PREMIOS</h2></div><button id="wheel-refresh" class="secondary" type="button">ACTUALIZAR</button></div>
+        <p class="muted">Los números de teléfono se registran según los datos ingresados por cada participante y no se verifican por SMS.</p>
+        <label>Buscar por nombre, teléfono, premio o código<input id="wheel-filter" placeholder="Buscar jugador o premio" autocomplete="off" /></label>
+        <p id="wheel-feedback" class="feedback" role="status"></p>
+        <div id="wheel-list" class="pending-list"></div>
+        <div class="pending-pagination"><button id="wheel-prev" class="secondary" type="button" hidden>Anterior</button><span id="wheel-page" class="muted"></span><button id="wheel-next" class="secondary" type="button" hidden>Siguiente</button></div>
+      </section>
+    </div>
   </section>
 </main>
 <footer>HOST POSADAS · CONTROL DE PREMIOS</footer>
