@@ -9,7 +9,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./admin.css?v=4">
 <script type="module" src="./admin.js?v=4"></script>
-<script type="module" src="./wheel-admin.js?v=1"></script>
+<script type="module" src="./wheel-admin.js?v=2"></script>
+<style>
+#wheel-dashboard .wheel-date-filters{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:14px 0}
+#wheel-dashboard .wheel-date-filters label{font-size:12px;font-weight:800}
+#wheel-dashboard input[type="date"]{display:block;margin-top:6px;padding:11px;border:1px solid #b96a31;background:#1b1311;color:#fff;border-radius:9px;font:700 14px Barlow,sans-serif}
+#wheel-dashboard .wheel-days{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+#wheel-dashboard .wheel-days button{padding:9px 12px;border-radius:10px;border:1px solid #a8582c;background:#301712;color:#f8c77a;font-weight:800;cursor:pointer}
+#wheel-dashboard .wheel-days button[aria-pressed="true"]{background:#e8a927;color:#27120b;border-color:#ffe198}
+#wheel-dashboard .wheel-day-label{display:inline-block;width:max-content;border-radius:6px;padding:3px 8px;background:#4b2518;color:#ffda8b;font-size:11px;font-weight:800}
+</style>
 </head>
 <body>
 <header class="header"><div><span class="brand">HOST<span>🔥</span></span><small>ADMINISTRACIÓN · JUEGOS HOST</small></div><a href="../">Volver a Raspa y Ganá</a></header>
@@ -99,8 +108,14 @@
       </div>
       <section class="panel">
         <div class="pending-header"><div><p class="eyebrow">RULETA HOST</p><h2>CLIENTES Y PREMIOS</h2></div><button id="wheel-refresh" class="secondary" type="button">ACTUALIZAR</button></div>
-        <p class="muted">Los números de teléfono se registran según los datos ingresados por cada participante y no se verifican por SMS.</p>
-        <label>Buscar por nombre, teléfono, premio o código<input id="wheel-filter" placeholder="Buscar jugador o premio" autocomplete="off" /></label>
+        <p class="muted">Elegí un día para ver quiénes participaron y sus premios. Las fechas corresponden a la hora de Argentina. Los teléfonos son declarados por los participantes y no se verifican por SMS.</p>
+        <div class="wheel-date-filters">
+          <label>FECHA DE PARTICIPACIÓN<input id="wheel-date" type="date" aria-label="Filtrar por fecha de participación" /></label>
+          <button type="button" id="wheel-today" class="secondary">HOY</button>
+          <button type="button" id="wheel-all" class="secondary">TODAS LAS FECHAS</button>
+        </div>
+        <div id="wheel-days" class="wheel-days" aria-label="Días con participaciones"></div>
+        <label>Buscar en la fecha seleccionada por nombre, teléfono, premio o código<input id="wheel-filter" placeholder="Buscar jugador o premio" autocomplete="off" /></label>
         <p id="wheel-feedback" class="feedback" role="status"></p>
         <div id="wheel-list" class="pending-list"></div>
         <div class="pending-pagination"><button id="wheel-prev" class="secondary" type="button" hidden>Anterior</button><span id="wheel-page" class="muted"></span><button id="wheel-next" class="secondary" type="button" hidden>Siguiente</button></div>
