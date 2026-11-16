@@ -21,6 +21,25 @@ function renderDays(){
  }
 }
 function feedback(message){$('wheel-feedback').textContent=message;}
+function remainingTime(expiresAt){
+ const ms=Date.parse(expiresAt)-Date.now();
+ if(!Number.isFinite(ms)||ms<=0)return 'CUPÓN VENCIDO';
+ const secs=Math.ceil(ms/1000),days=Math.floor(secs/86400),hours=Math.floor(secs%86400/3600);
+ const minutes=Math.floor(secs%3600/60),seconds=secs%60;
+ const pad=value=>String(value).padStart(2,'0');
+ return '⏳ Faltan '+days+'d '+pad(hours)+'h '+pad(minutes)+'m '+pad(seconds)+'s';
+}
+function updateCountdowns(){
+ for(const timer of document.querySelectorAll('#wheel-list .wheel-countdown')){
+  const value=remainingTime(timer.dataset.expires);
+  timer.textContent=value;
+  const expired=value==='CUPÓN VENCIDO';
+  timer.style.color=expired?'#ff817b':'#ffcf55';
+  const action=timer.closest('.pending-card')?.querySelector('.pending-deliver');
+  if(expired&&action){action.disabled=true;action.textContent='CUPÓN VENCIDO';}
+ }
+}
+setInterval(updateCountdowns,1000);
 function el(tag,className,value){const node=document.createElement(tag);if(className)node.className=className;if(value!==undefined)node.textContent=value;return node;}
 
 async function invoke(method,args={}){
@@ -46,7 +65,13 @@ function render(){
   const card=el('article','pending-card');const details=el('div','pending-details');
   details.append(el('span','wheel-day-label',dayLabel(p.played_day)),el('strong','wheel-player',p.name+' · '+p.phone),el('strong','pending-prize',p.prize),el('span','pending-code','Código: '+p.claim_code),el('small','wheel-meta','Jugado: '+date(p.spun_at)));
   const expired=!p.redeemed_at&&new Date(p.expires_at).getTime()<=Date.now();
-  details.append(el('small','wheel-meta',p.redeemed_at?'✅ Canjeado: '+date(p.redeemed_at):expired?'⌛ Vencido: '+date(p.expires_at):'Vence: '+date(p.expires_at)));
+  details.append(el('small','wheel-meta',p.redeemed_at?'✅ Canjeado: '+date(p.redeemed_at):'Vence: '+date(p.expires_at)));
+  if(!p.redeemed_at){
+    const countdown=el('small','wheel-meta wheel-countdown',remainingTime(p.expires_at));
+    countdown.dataset.expires=p.expires_at;
+    countdown.style.cssText='font-weight:900;font-size:13px;font-variant-numeric:tabular-nums;margin-top:4px';
+    details.append(countdown);
+  }
   card.append(details);
   if(!p.redeemed_at&&!expired){
     const button=el('button','primary pending-deliver','MARCAR COMO ENTREGADO');button.type='button';
@@ -56,6 +81,7 @@ function render(){
  }
  $('wheel-prev').hidden=offset===0;$('wheel-next').hidden=offset+records.length>=totalRows;
  $('wheel-page').textContent='Página '+(Math.floor(offset/pageSize)+1);
+ updateCountdowns();
 }
 async function redeem(p,button){
  if(!confirm('¿Confirmás que HOST YA ENTREGÓ «'+p.prize+'» a '+p.name+'? Código: '+p.claim_code+'. Esta acción es definitiva.'))return;
