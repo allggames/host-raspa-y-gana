@@ -34,3 +34,10 @@
 /* Historial de premios efectivamente canjeados */
 .redeemed-card{border-color:#285e42;background:#0f1d16}
 .redeemed-date{color:#8ef0b2;font-size:13px;font-weight:800}
+
+/* Navegación compartida para los dos juegos */
+.game-tabs{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 24px}
+.game-tabs button{min-width:150px}
+#wheel-filter{display:block;width:100%;max-width:410px;margin:9px 0 16px;padding:12px;border-radius:9px;background:#1a1716;color:white;border:1px solid #9e4a29}
+.wheel-player{color:#f7c477;font-weight:800;font-size:13px}
+.wheel-meta{font-size:12px;color:#d6bbad;overflow-wrap:anywhere}
